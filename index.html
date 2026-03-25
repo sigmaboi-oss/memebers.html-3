@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+/* 🛑 ANTI-WHITE BACKGROUND RESET */
+html, body {
+    background-color: #000 !important; /* Forces background to black */
+    margin: 0;
+    padding: 10px; 
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* 🔥 GARBO SCROLLBAR CANCELLATION */
+#scrollBox::-webkit-scrollbar {
+    display: none !important;
+}
+
+#scrollBox {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+    overflow-y: auto;
+}
+
+/* 🔥 THE MAIN BOX STYLING */
+#mainContainer {
+    background: #050505; /* This is your actual box color */
+    border: 2px solid #ff3c00;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 0 15px rgba(255, 60, 0, 0.4);
+}
+
+#mainContainer:hover {
+    box-shadow: 0 0 30px #ff3c00, 0 0 50px rgba(255, 106, 0, 0.5);
+    transform: scale(1.01);
+}
+</style>
+
+</head>
+
+<body style="font-family:'Segoe UI',sans-serif; color:#fff;">
+
+<div id="mainContainer">
+    <div style="
+    padding:12px;
+    font-weight:900;
+    font-size:13px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:#ffae00;
+    border-bottom:2px solid #ff3c00;
+    text-shadow:0 0 10px #ff3c00;
+    background: #0a0a0a;
+    ">
+    🔥 Latest Recruits
+    </div>
+
+    <div id="scrollBox" style="
+    height:280px;
+    background:linear-gradient(to bottom,#0a0a0a,#000);
+    padding:8px;
+    ">
+        <div id="members">Loading...</div>
+    </div>
+</div>
+
+<script>
+// ... (The rest of your script remains exactly the same as before) ...
+const club = "group-a162138be57d83c3500191b84a4b325d";
+let scrollBox = document.getElementById("scrollBox");
+let container = document.getElementById("members");
+let autoScrolling = true;
+let idleTimer = null;
+let speed = 0.3;
+
+async function load(){
+try{
+const res = await fetch(`https://api.chess.com/pub/club/${club}/members`);
+const data = await res.json();
+let members = (data.weekly || []).sort((a,b)=>b.joined - a.joined).slice(0,5);
+container.innerHTML = "";
+for(let i=0;i<members.length;i++){
+let u = members[i];
+let isFirst = i===0;
+let div = document.createElement("div");
+div.style.cssText = `display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:6px;border-radius:10px;border:1px solid rgba(255,60,0,0.15);background:rgba(0,0,0,0.4);color:#cfcfcf;transition:all 0.25s ease;`;
+div.onmouseover = () => { div.style.color = "#ffae00"; div.style.transform = "scale(1.03)"; div.style.boxShadow = "0 0 25px rgba(255,60,0,0.7),0 0 50px rgba(255,120,0,0.5)"; div.style.border = "1px solid #ff3c00"; };
+div.onmouseout = () => { div.style.color = "#cfcfcf"; div.style.transform = "scale(1)"; div.style.boxShadow = "none"; div.style.border = "1px solid rgba(255,60,0,0.15)"; };
+container.appendChild(div);
+try{
+let profile = await fetch(`https://api.chess.com/pub/player/${u.username}`).then(r=>r.json());
+let stats = await fetch(`https://api.chess.com/pub/player/${u.username}/stats`).then(r=>r.json());
+let rating = stats.chess_rapid ? stats.chess_rapid.last.rating : "—";
+let online = profile.status==="online";
+let avatar = profile.avatar || "https://www.chess.com/bundles/web/images/noavatar_l.84a92436.gif";
+div.innerHTML = `<img src="${avatar}" style="width:34px;height:34px;border-radius:50%;box-shadow:0 0 10px rgba(255,60,0,0.5);"><div style="display:flex;flex-direction:column;"><a href="https://www.chess.com/member/${u.username}" target="_blank" style="text-decoration:none;color:inherit;font-weight:700;">${u.username}</a><div style="font-size:11px;color:#888;">${online ? "🟢 Online" : "⚫ Offline"} • Rapid: ${rating}</div></div>${isFirst ? `<span style="margin-left:auto;font-size:10px;background:#ff3c00;padding:3px 8px;border-radius:6px;font-weight:900;box-shadow:0 0 12px #ff3c00;">NEW</span>` : ""}`;
+}catch(e){ div.innerHTML = `<div style="color:red;">Error loading ${u.username}</div>`; }
+}
+}catch(e){ container.innerHTML = "<div style='color:red;padding:10px;'>FAILED TO LOAD</div>"; }
+}
+load();
+function autoScroll(){ if(autoScrolling){ scrollBox.scrollTop += speed; if(scrollBox.scrollTop >= scrollBox.scrollHeight - scrollBox.clientHeight){ autoScrolling = false; } } requestAnimationFrame(autoScroll); }
+autoScroll();
+scrollBox.addEventListener("scroll", () => { autoScrolling = false; clearTimeout(idleTimer); idleTimer = setTimeout(()=>{ if(scrollBox.scrollTop < scrollBox.scrollHeight - scrollBox.clientHeight){ autoScrolling = true; } }, 3000); });
+</script>
+
+</body>
+</html>
